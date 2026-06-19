@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: stackit-web
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=docker_compose_override_secret_key_98765
+      - DATABASE_URL=sqlite:///database.db
+    volumes:
+      - sqlite_data:/app/instance
+    restart: always
+
+volumes:
+  sqlite_data:
