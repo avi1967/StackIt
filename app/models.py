@@ -37,7 +37,7 @@ class Question(db.Model):
 
     answers = db.relationship('Answer', backref='question', cascade="all, delete-orphan")
     
-    # New: who upvoted this question
+    # who upvoted this question
     voters = db.relationship('User', secondary='question_upvotes', backref='upvoted_questions')
 
 class Answer(db.Model):
