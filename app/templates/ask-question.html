@@ -3,149 +3,140 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ask a Question - Q&A Hub</title>
-
+  <title>Ask a Question - StackIt</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
-
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+  <link href="/static/css/style.css" rel="stylesheet" />
   <style>
-    body {
-      background-color: #f4f8ff;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .question-container {
-      max-width: 800px;
-      margin: auto;
-      margin-top: 4%;
-      padding: 2rem;
-      background-color: #fff;
-      border-radius: 15px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-    }
-    .form-label {
-      font-weight: 600;
-    }
     #editor {
-      height: 200px;
-      background-color: white;
+      height: 250px;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
     }
-    .btn-submit {
-      background-color: #5c1d99;
-      color: white;
-      font-weight: bold;
+    .ql-toolbar {
+      background-color: var(--bg-tertiary);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      border-color: var(--border-color) !important;
     }
-    .btn-submit:hover {
-      background-color: #490d82;
+    .ql-container {
+      border-color: var(--border-color) !important;
     }
-    #tag-input {
+    #tag-input-box {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
+      gap: 6px;
       min-height: 48px;
-      padding: 6px;
-      border: 1px solid #ced4da;
-      border-radius: 6px;
-      background: #fff;
-      cursor: text;
+      padding: 6px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-secondary);
     }
-    #tag-input input {
+    #tag-input-box input {
       border: none;
       outline: none;
+      background: transparent;
+      color: var(--text-primary);
       flex-grow: 1;
-      min-width: 120px;
-    }
-    .tag-pill {
-      background-color: #e4d5f7;
-      color: #5c1d99;
-      border-radius: 50px;
-      padding: 4px 12px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-    }
-    .tag-pill .remove-tag {
-      margin-left: 8px;
-      cursor: pointer;
+      min-width: 150px;
     }
   </style>
 </head>
 <body>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+      }
+    })();
+  </script>
 
-  <div class="container">
-    <div class="question-container">
-      <h3 class="mb-4 text-center">📝 Ask a New Question</h3>
-      <form id="questionForm" enctype="multipart/form-data" action="{{ url_for('main.ask') }}">
-        <div class="mb-3">
-          <label for="title" class="form-label">Question Title</label>
-          <input type="text" class="form-control" id="title" name="title" placeholder="e.g. How do I use React Hooks?" required />
+  <!-- Navbar -->
+  <nav class="navbar-custom d-flex justify-content-between align-items-center">
+    <a href="{{ url_for('main.home') }}" class="brand-logo">🪶 StackIt</a>
+    <div class="d-flex align-items-center gap-3">
+      <a href="{{ url_for('main.home') }}" class="btn btn-outline-custom">Back to Home</a>
+    </div>
+  </nav>
+
+  <div class="container py-5" style="max-width: 850px;">
+    <div class="detail-box question-container">
+      <h3 class="fw-bold mb-4 text-center">📝 Ask a New Question</h3>
+      
+      <form id="questionForm" enctype="multipart/form-data">
+        <div class="mb-4">
+          <label for="title" class="form-label fw-bold">Question Title</label>
+          <input type="text" class="form-control form-control-lg" id="title" name="title" placeholder="e.g. How do I use React Hooks?" required />
+          <small class="text-muted">Be specific and imagine you're asking a question to another developer.</small>
         </div>
 
-        <div class="mb-3">
-          <label for="editor" class="form-label">Description</label>
+        <div class="mb-4">
+          <label class="form-label fw-bold">Description</label>
           <div id="editor"></div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Tags</label>
-          <div id="tag-input">
+        <div class="mb-4">
+          <label class="form-label fw-bold">Tags</label>
+          <div id="tag-input-box">
             <ul id="tag-list" class="list-unstyled d-flex flex-wrap gap-2 mb-0 ps-0"></ul>
             <input type="text" id="tagInputField" placeholder="Type a tag and press Enter" />
           </div>
-          <input type="hidden" name="tags" id="tagsHiddenInput" />
-          <small class="text-muted">Press Enter after each tag. Example: React, JWT</small>
+          <small class="text-muted">Press Enter after each tag. Add up to 5 descriptive tags.</small>
         </div>
 
-        <div class="mb-3">
-          <label for="image" class="form-label">Upload Image (optional)</label>
+        <div class="mb-4">
+          <label for="image" class="form-label fw-bold">Upload Image (optional)</label>
           <input type="file" class="form-control" id="image" name="image" accept="image/*" />
         </div>
 
-        <div class="d-grid mt-4">
-          <button type="submit" class="btn btn-submit">Submit Question</button>
+        <div class="d-grid mt-5">
+          <button type="submit" class="btn btn-primary-custom py-3 animate-pulse-hover">Submit Question</button>
         </div>
       </form>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.min.js"></script>
 
   <script>
+    // Initialize Quill
     const quill = new Quill('#editor', {
       theme: 'snow',
-      placeholder: 'Describe your question in detail...',
+      placeholder: 'Describe your question in detail. Provide code snippets, logs, or steps to reproduce if applicable...',
       modules: {
         toolbar: [
           [{ 'header': [1, 2, false] }],
-          ['bold', 'italic', 'strike'],
+          ['bold', 'italic', 'underline', 'code-block'],
           [{ 'list': 'ordered'}, { 'list': 'bullet' }],
           ['link', 'image'],
-          [{ 'align': [] }]
+          ['clean']
         ]
       }
     });
 
+    // Tag Pill Management
     const tagInputField = document.getElementById("tagInputField");
     const tagList = document.getElementById("tag-list");
-    const tagsHiddenInput = document.getElementById("tagsHiddenInput");
     let tags = [];
 
     function renderTags() {
       tagList.innerHTML = "";
       tags.forEach((tag, index) => {
         const tagEl = document.createElement("li");
-        tagEl.classList.add("tag-pill");
-        tagEl.innerHTML = `${tag} <span class="remove-tag" data-index="${index}">&times;</span>`;
+        tagEl.className = "tag-pill mb-0";
+        tagEl.innerHTML = `${tag} <span class="ms-1 remove-tag" style="cursor:pointer;" data-index="${index}">&times;</span>`;
         tagList.appendChild(tagEl);
       });
-      tagsHiddenInput.value = JSON.stringify(tags);
     }
 
     tagInputField.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        const value = tagInputField.value.trim();
-        if (value && !tags.includes(value)) {
+        const value = tagInputField.value.trim().replace(/[^a-zA-Z0-9+\-#]/g, ''); // alphanumeric plus +, -, #
+        if (value && !tags.includes(value) && tags.length < 5) {
           tags.push(value);
           renderTags();
           tagInputField.value = "";
@@ -161,14 +152,15 @@
       }
     });
 
-    document.getElementById('questionForm').addEventListener('submit', function (e) {
+    // Submit question via real AJAX
+    document.getElementById('questionForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
       const title = document.getElementById('title').value.trim();
-      const description = quill.root.innerHTML;
+      const description = quill.root.innerHTML.trim();
       const image = document.getElementById('image').files[0];
 
-      if (!title || !description || tags.length === 0) {
+      if (!title || description === '<p><br></p>' || tags.length === 0) {
         alert('Please fill all fields and add at least one tag.');
         return;
       }
@@ -176,7 +168,7 @@
       const formData = new FormData();
       formData.append('title', title);
       formData.append('body', description);
-      formData.append('tags', JSON.stringify(tags));
+      formData.append('tags', tags.join(', '));
       if (image) {
         formData.append('image', image);
       }
@@ -185,18 +177,29 @@
       const container = document.querySelector('.question-container');
       container.innerHTML = `
         <div class="text-center py-5">
-          <div class="spinner-border text-primary mb-3" role="status"></div>
-          <h4>Uploading your question...</h4>
+          <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+          <h4 class="fw-bold text-primary">Uploading your question...</h4>
+          <p class="text-secondary">Please wait while we save your question.</p>
         </div>
       `;
 
-      // Simulate upload
-      setTimeout(() => {
-        // Replace with actual backend POST request later
-        window.location.href = "{{ url_for('main.success') }}"; // <-- Success page
-      }, 2000);
+      try {
+        const response = await fetch("{{ url_for('main.ask') }}", {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          window.location.href = "{{ url_for('main.success') }}";
+        } else {
+          alert('Error submitting question. Please check details and try again.');
+          window.location.reload();
+        }
+      } catch (error) {
+        alert('An error occurred: ' + error.message);
+        window.location.reload();
+      }
     });
   </script>
-
 </body>
 </html>
