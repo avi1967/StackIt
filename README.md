@@ -103,6 +103,3 @@ StackIt/
 └── README.md                   # Project documentation
 ```
 
----
-
-**🎥 Video Demo Link**: [Google Drive Link](https://drive.google.com/file/d/1fS2JzMCoYoRBcmXCeuMQMmZBX_YyXRIU/view?usp=drive_link)
