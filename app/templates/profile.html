@@ -3,91 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Profile - Q&A Hub</title>
+  <title>My Profile - StackIt</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      background-color: #f0f7ff;
-    }
-    .profile-container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 2rem;
-      margin-top: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    .profile-pic {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    .section-title {
-      font-weight: bold;
-      margin-top: 2rem;
-    }
-    .question, .answer {
-      background: #f8f9fa;
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-    }
-  </style>
+  <link href="/static/css/style.css" rel="stylesheet" />
 </head>
 <body>
-  <div class="container profile-container">
-    <h3 class="text-center mb-4">👤 My Profile</h3>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+      }
+    })();
+  </script>
 
-    <!-- Profile Picture and Name Update -->
-    <form method="POST" enctype="multipart/form-data">
-      <div class="text-center mb-3">
-        <label for="profileUpload">
-          <img src="{{ current_user.profile_pic or 'https://via.placeholder.com/100' }}" alt="Profile Picture" class="profile-pic" title="Click to change">
-        </label>
-        <input type="file" name="profile_pic" id="profileUpload" accept="image/*" hidden />
-      </div>
+  <!-- Navbar -->
+  <nav class="navbar-custom d-flex justify-content-between align-items-center">
+    <a href="{{ url_for('main.home') }}" class="brand-logo">🪶 StackIt</a>
+    <div class="d-flex align-items-center gap-3">
+      <a href="{{ url_for('main.home') }}" class="btn btn-outline-custom">Back to Home</a>
+    </div>
+  </nav>
 
-      <div class="mb-3">
-        <label class="form-label">Display Name</label>
-        <input type="text" name="name" class="form-control" value="{{ current_user.username.split('@')[0] }}" required />
-      </div>
+  <div class="container py-5" style="max-width: 850px;">
+    <!-- Profile Container -->
+    <div class="detail-box">
+      <h3 class="fw-bold mb-4 text-center">👤 My Profile</h3>
 
-      <div class="d-flex justify-content-between">
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-        <a href="{{ url_for('main.logout') }}" class="btn btn-outline-danger">Logout</a>
-      </div>
-    </form>
+      <!-- Profile Update Form -->
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.profile') }}">
+        <div class="text-center mb-4">
+          <label for="profileUpload" style="cursor: pointer;">
+            <img src="{{ current_user.profile_pic or 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100' }}" alt="Profile Picture" class="user-avatar-custom" style="width: 120px; height: 120px; border-width: 3px;" title="Click to change profile picture">
+          </label>
+          <input type="file" name="profile_pic" id="profileUpload" accept="image/*" hidden />
+          <div class="text-muted small mt-2">Click photo to upload new image</div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-bold">Display Username / Email</label>
+          <input type="text" name="name" class="form-control form-control-lg" value="{{ current_user.username }}" required />
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-5">
+          <button type="submit" class="btn btn-primary-custom py-2 px-4">Update Profile</button>
+          <a href="{{ url_for('main.logout') }}" class="btn btn-outline-danger">Logout</a>
+        </div>
+      </form>
+    </div>
 
     <!-- Questions -->
-    <h5 class="section-title">📝 My Questions</h5>
-    {% if questions %}
-      {% for q in questions %}
-        <div class="question">
-          <a href="{{ url_for('main.view_question', id=q.id) }}" class="text-decoration-none text-dark">
-            <strong>{{ q.title }}</strong>
-            <p class="text-muted">{{ q.created_at.strftime('%b %d, %Y') }}</p>
-          </a>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p class="text-muted">You haven't asked any questions yet.</p>
-    {% endif %}
+    <h4 class="fw-bold mt-5 mb-4 px-2">📝 My Questions ({{ questions|length }})</h4>
+    <div class="mb-4">
+      {% if questions %}
+        {% for q in questions %}
+          <div class="forum-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="fw-bold mb-0">
+                <a href="{{ url_for('main.view_question', id=q.id) }}" class="text-decoration-none text-primary-hover">
+                  {{ q.title }}
+                </a>
+              </h5>
+              <span class="text-secondary small">{{ q.created_at.strftime('%b %d, %Y') }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-muted text-center py-4 bg-white rounded border border-light">You haven't asked any questions yet.</div>
+      {% endif %}
+    </div>
 
     <!-- Answers -->
-    <h5 class="section-title">💬 My Answers</h5>
-    {% if answers %}
-      {% for a in answers %}
-        <div class="answer">
-          <p>{{ a.content }}</p>
-          <small class="text-muted">On: <a href="{{ url_for('main.view_question', id=a.question_id) }}">{{ a.question.title }}</a></small>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p class="text-muted">You haven't answered any questions yet.</p>
-    {% endif %}
+    <h4 class="fw-bold mt-5 mb-4 px-2">💬 My Answers ({{ answers|length }})</h4>
+    <div>
+      {% if answers %}
+        {% for a in answers %}
+          <div class="answer-card">
+            <div class="py-2 text-secondary fs-6" style="white-space: pre-wrap; word-wrap: break-word;">{{ a.content }}</div>
+            <div class="mt-2 border-top border-light pt-2">
+              <span class="text-muted small">
+                Answered on: <a href="{{ url_for('main.view_question', id=a.question_id) }}" class="fw-medium text-primary text-decoration-none">{{ a.question.title }}</a>
+              </span>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-muted text-center py-4 bg-white rounded border border-light">You haven't posted any answers yet.</div>
+      {% endif %}
+    </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
