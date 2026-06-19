@@ -9,6 +9,15 @@ from flask import jsonify
 main = Blueprint('main', __name__)
 
 
+@main.after_request
+def add_header(response):
+    # Prevent browser caching for security and correct back-button authentication checks
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 @main.route('/')
 def root():
     return redirect(url_for('main.login'))
@@ -21,7 +30,7 @@ def home():
 
     # Unread notification count and recent notifications
     unread_count = len([n for n in current_user.notifications if not n.is_read])
-    recent_notifications = sorted(current_user.notifications, key=lambda n: n.timestamp, reverse=True)[:10]
+    recent_notifications = sorted(current_user.notifications, key=lambda n: n.created_at, reverse=True)[:10]
 
     return render_template('home.html',
                            questions=questions,
@@ -87,7 +96,7 @@ def view_question(id):
         db.session.commit()
         return redirect(url_for('main.view_question', id=id))
 
-    return render_template('question.html', question=question)
+    return render_template('view_question.html', question=question)
 
 
 @main.route('/upvote/<int:question_id>', methods=['POST'])
@@ -176,3 +185,35 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('main.login'))
+
+
+@main.route('/notifications/read', methods=['POST'])
+@login_required
+def read_notifications():
+    for notification in current_user.notifications:
+        if not notification.is_read:
+            notification.is_read = True
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+@main.route('/question/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_question(id):
+    question = Question.query.get_or_404(id)
+    if question.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    db.session.delete(question)
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+@main.route('/answer/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_answer(id):
+    answer = Answer.query.get_or_404(id)
+    if answer.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    db.session.delete(answer)
+    db.session.commit()
+    return jsonify({'status': 'success'})
